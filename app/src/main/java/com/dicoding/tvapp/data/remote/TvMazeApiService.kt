@@ -11,6 +11,6 @@ interface TvMazeApiService {
     @GET("shows")
     suspend fun getShows(@Query("page") page: Int = 0): List<TvShow>
 
-    @GET("shows/{id}")
+    @GET("shows/{id}?embed[]=seasons&embed[]=episodes&embed[]=cast")
     suspend fun getShowDetail(@Path("id") id: Int): TvShowDetail
 }

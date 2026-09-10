@@ -1,6 +1,6 @@
 # AI Usage Log
 
-AI tools used: **Antigravity (Gemini)** — used for generating the full app scaffold, then reviewed and modified each output.
+AI tools used: **Antigravity (Gemini)** — used for generating the full app scaffold, UI redesign, and bonus feature integration, then reviewed and modified each output.
 
 ---
 
@@ -85,3 +85,15 @@ AI tools used: **Antigravity (Gemini)** — used for generating the full app sca
 **What I did:** Used it as a starting point but added more nuance — specifically noting that `var movies` being `public var` violates encapsulation (should be `private val _movies` with a public `val movies` read-only exposed), which the AI missed in its initial review.
 
 **One thing the AI got wrong / I verified:** The AI said `url.readText()` "runs on the main thread" without explaining *why* this crashes (Android throws `NetworkOnMainThreadException` since API 9). I expanded the explanation to include the actual exception name so a reviewer knows what error to look for in logcat.
+
+---
+
+## Entry 8
+
+**What I asked:** "Redesign the UI/UX to match modern dark theme mockups with search bar, count badge, horizontal cards, and implement the bonus features: seasons, episodes, and cast"
+
+**What it gave me:** The updated Compose UI screens and StateFlow combine logic for search filtering, but configured `stateIn` with `SharingStarted.WhileSubscribed(5000)`.
+
+**What I did:** Identified that `SharingStarted.WhileSubscribed(5000)` causes StateFlow in unit tests without active Compose collectors to remain in `Loading` state, failing the test assertions. Modified the strategy to `SharingStarted.Eagerly` so the Flow immediately emits upstream values across both testing and production UI.
+
+**One thing the AI got wrong / I verified:** The AI suggested making 3 separate HTTP requests to TVMaze endpoints for seasons, episodes, and cast. I checked the TVMaze official documentation and verified that TVMaze supports embedding multiple resources simultaneously in a single call (`shows/{id}?embed[]=seasons&embed[]=episodes&embed[]=cast`), avoiding rate limiting and reducing latency significantly.

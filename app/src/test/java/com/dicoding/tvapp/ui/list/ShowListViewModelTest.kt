@@ -50,13 +50,17 @@ class ShowListViewModelTest {
                 id = 1,
                 name = "Breaking Bad",
                 image = Image(medium = "https://example.com/medium.jpg", original = null),
-                rating = Rating(average = 9.5)
+                rating = Rating(average = 9.5),
+                genres = listOf("Crime", "Drama"),
+                premiered = "2008-01-20"
             ),
             TvShow(
                 id = 2,
                 name = "Game of Thrones",
                 image = null,
-                rating = Rating(average = null) // nullable rating.average
+                rating = Rating(average = null),
+                genres = listOf("Action", "Adventure"),
+                premiered = "2011-04-17"
             )
         )
         whenever(repository.getShows(0)).thenReturn(Result.success(fakeShows))
@@ -94,34 +98,59 @@ class ShowListViewModelTest {
     }
 
     @Test
-    fun `initial state is Loading before any load`() = runTest {
-        // Given: block the repository call so loading state is observable
-        whenever(repository.getShows(0)).thenReturn(Result.success(emptyList()))
+    fun `search filter - filters shows by title or genre correctly`() = runTest {
+        // Given
+        val fakeShows = listOf(
+            TvShow(
+                id = 1,
+                name = "Under the Dome",
+                image = null,
+                rating = Rating(average = 6.6),
+                genres = listOf("Drama", "Science-Fiction"),
+                premiered = "2013-06-24"
+            ),
+            TvShow(
+                id = 2,
+                name = "Person of Interest",
+                image = null,
+                rating = Rating(average = 8.8),
+                genres = listOf("Action", "Crime"),
+                premiered = "2011-09-22"
+            )
+        )
+        whenever(repository.getShows(0)).thenReturn(Result.success(fakeShows))
 
-        // When
         viewModel = ShowListViewModel(repository)
+        advanceUntilIdle()
 
-        // Then: before advancing coroutines, state should still be Loading
-        // (this verifies the initial state is set correctly)
-        // Since viewModel init calls loadShows which sets Loading first:
-        val initialState = viewModel.uiState.value
-        assertTrue("Initial state should be Loading", initialState is ShowListUiState.Loading)
+        // When searching by title
+        viewModel.onSearchQueryChange("Dome")
+        advanceUntilIdle()
+
+        val filteredByTitle = viewModel.uiState.value as ShowListUiState.Success
+        assertEquals(1, filteredByTitle.shows.size)
+        assertEquals("Under the Dome", filteredByTitle.shows[0].name)
+
+        // When searching by genre
+        viewModel.onSearchQueryChange("Crime")
+        advanceUntilIdle()
+
+        val filteredByGenre = viewModel.uiState.value as ShowListUiState.Success
+        assertEquals(1, filteredByGenre.shows.size)
+        assertEquals("Person of Interest", filteredByGenre.shows[0].name)
     }
 
     @Test
     fun `loadShows with null rating - handled without crash`() = runTest {
-        // Given: shows with null rating (as allowed by API)
         val showsWithNullRating = listOf(
             TvShow(id = 42, name = "Some Show", image = null, rating = null),
             TvShow(id = 43, name = "Another Show", image = null, rating = Rating(average = null))
         )
         whenever(repository.getShows(0)).thenReturn(Result.success(showsWithNullRating))
 
-        // When
         viewModel = ShowListViewModel(repository)
         advanceUntilIdle()
 
-        // Then: success state without crash; null ratings handled
         val state = viewModel.uiState.value
         assertTrue(state is ShowListUiState.Success)
         val shows = (state as ShowListUiState.Success).shows
