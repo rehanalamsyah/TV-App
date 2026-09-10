@@ -2,7 +2,7 @@
 
 A modern Android TV show browser app built with **Kotlin + Jetpack Compose**, using the [TVMaze public API](https://www.tvmaze.com/api).
 
-> 🎬 Video walkthrough: *[Link to be added after recording]*
+> 🎬 Video walkthrough: *https://drive.google.com/file/d/1T4WAfCLPrvLpqA4D8BJ0OEuycY5F9JIT/view?usp=sharing*
 
 ---
 
